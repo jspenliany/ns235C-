@@ -14,7 +14,7 @@
 #include <cmu-trace.h>
 
 //======define part===================
-char GstrIP[30];
+char GstrIP[32];
 int  GnodeId[10];
 
 
@@ -72,6 +72,8 @@ TAVRagent::TAVRagent(nsaddr_t ip) : Agent(PT_SIMUTAVR), hello_timer_(this), repl
 		vehicle_position_y_LIST_[i] = -100.0;
 	}
 
+	conf_test_AXIS_ip = -100;
+
 }
 
 void
@@ -100,101 +102,35 @@ TAVRagent::sendHello() {
 	ch->direction() = hdr_cmn::DOWN;
 	ch->iface() = -2;
 	ch->error() = 0;
-	if(conf_test_INET == 34){//100010, to base station net IP
-		ch->addr_type() = NS_AF_INET;
-		ch->next_hop() = Address::instance().str2addr("1.0.0");
-	}else if(conf_test_INET == 40){//101000, specifical IP
-		ch->addr_type() = NS_AF_INET;
-		ch->next_hop() = Address::instance().str2addr("1.0.0");
-	}else if(conf_test_INET == 36){//100100, subnet broadcast
-		ch->addr_type() = NS_AF_NONE;
-		ch->next_hop() = IP_BROADCAST;
-	}else if(conf_test_INET == 48){//110000, subnet IP
-		ch->addr_type() = NS_AF_ILINK;
-		ch->next_hop() = Address::instance().str2addr("2.0.2");
-	}else if(conf_test_INET == 16){//010000, subnet IP
-		ch->addr_type() = NS_AF_INET;
-		ch->next_hop() = Address::instance().str2addr("2.0.2");
-	}else if(conf_test_INET == 17){//010001, subnet IP
-		ch->addr_type() = NS_AF_NONE;
-		ch->next_hop() = Address::instance().str2addr("2.0.2");
-	}else if(conf_test_INET == 33){//100001, wired IP
-		ch->addr_type() = NS_AF_ILINK;
-		ch->next_hop() = Address::instance().str2addr("0.0.2");
-	}else{//NOT valid options
-		ch->addr_type() = NS_AF_ILINK;
-		ch->next_hop() = Address::instance().str2addr("12.0.2");
-	}
-
+	ch->addr_type() = NS_AF_INET;
 	ch->prev_hop_ = vehicle_ip();          //
 
-
-	ih->saddr() = vehicle_ip();
-
-	if(conf_test_INET == 34){//100010, to base station net IP
-		ih->daddr() = Address::instance().str2addr("1.0.0");
-	}else if(conf_test_INET == 40){//101000, specifical IP
-		ih->daddr() = Address::instance().str2addr("1.0.0");
-	}else if(conf_test_INET == 36){//100100, subnet broadcast
-		ih->daddr() = IP_BROADCAST;
-	}else if(conf_test_INET == 48){//110000, subnet IP
-		ih->daddr() = Address::instance().str2addr("2.0.2");
-	}else if(conf_test_INET == 16){//110000, subnet IP
-		ih->daddr() = Address::instance().str2addr("2.0.2");
-	}else if(conf_test_INET == 17){//110000, subnet IP
-		ih->daddr() = Address::instance().str2addr("2.0.2");
-	}else if(conf_test_INET == 33){//110000, subnet IP
-		ih->daddr() = Address::instance().str2addr("0.0.2");
-	}else{//NOT valid options
-		ih->daddr() = Address::instance().str2addr("12.0.2");
+	switch(conf_test_AXIS_ip){
+	case 15:
+		ch->next_hop() = Address::instance().str2addr("1.0.15");break;
+	case 2:
+		ch->next_hop() = Address::instance().str2addr("1.0.2");break;
+	default:
+		ch->next_hop() = Address::instance().str2addr("2.0.2");break;
 	}
 
-
+	ih->saddr() = vehicle_ip();
+//	ih->daddr() = Address::instance().str2addr(conf_test_AXIS_ip.c_str());
 	ih->sport() = RT_PORT;
 	ih->dport() = RT_PORT;
 	ih->ttl_ = 10;
 
-	char* sip = new char[1];
-	char* dip = new char[1];
-	int   slen = 0;
-	int   dlen = 0;
-	double tIME = CURRENT_TIME;
 
-	if(conf_debug > 100){
-		if(node_->base_stn() == vehicle_ip()){
-			return;
-		}else{
-			slen = strlen(Address::instance().print_nodeaddr(ih->saddr()));
-			dlen = strlen(Address::instance().print_nodeaddr(ih->daddr()));
-			sip = new char[slen+1];
-			dip = new char[dlen+1];
-			sip[slen]='/0';
-			dip[dlen]='/0';
-			strcpy(sip,Address::instance().print_nodeaddr(ih->saddr()));//sip = Address::instance().print_nodeaddr(ih->saddr());
-			strcpy(dip,Address::instance().print_nodeaddr(ih->daddr()));//dip = Address::instance().print_nodeaddr(ih->daddr());
-			if(conf_debug == 102){
-				fprintf(stdout,"\n\tTAVRagent  sendHello cd=%d Time=%0.1f sip=%s dip=%s posx=%0.2f, posy=%0.2f speed=%0.4f",conf_debug,tIME,sip, dip,tavrh->vehicle_position_x(),tavrh->vehicle_position_y(),tavrh->vehicle_speed());
-			}
-			Scheduler::instance().schedule(target_, p, 0.0);
-		}
-	}else if(conf_debug == 2){
-		slen = strlen(Address::instance().print_nodeaddr(ih->saddr()));
-		dlen = strlen(Address::instance().print_nodeaddr(ih->daddr()));
-		sip = new char[slen+1];
-		dip = new char[dlen+1];
-		sip[slen]='/0';
-		dip[dlen]='/0';
-		strcpy(sip,Address::instance().print_nodeaddr(vehicle_ip()));//sip = Address::instance().print_nodeaddr(ih->saddr());
-		strcpy(dip,Address::instance().print_nodeaddr(ih->daddr()));
-		if(conf_debug == 2){
-			fprintf(stdout,"\n\tTAVRagent  sendHello cd=%d Time=%0.1f sip=%s dip=%s posx=%0.2f, posy=%0.2f speed=%0.4f",conf_debug,tIME,sip, dip,tavrh->vehicle_position_x(),tavrh->vehicle_position_y(),tavrh->vehicle_speed());
-		}
-		Scheduler::instance().schedule(target_, p, 0.0);
-	}else if(conf_debug == 3){
-		fprintf(stdout,"\n\tTAVRagent  sendHello cd=%d Time=%0.1f sip=%s dip=%s posx=%0.2f, posy=%0.2f speed=%0.4f",conf_debug,tIME,Address::instance().print_nodeaddr(vehicle_ip()), Address::instance().print_nodeaddr(ih->daddr()),tavrh->vehicle_position_x(),tavrh->vehicle_position_y(),tavrh->vehicle_speed());
-		fprintf(stdout,"\n\tTAVRagent  sendHello cd=%d Time=%0.1f sip=%s dip=%s posx=%0.2f, posy=%0.2f speed=%0.4f",conf_debug,tIME,Address::instance().print_nodeaddr(ih->saddr()), Address::instance().print_nodeaddr(ih->daddr()),tavrh->vehicle_position_x(),tavrh->vehicle_position_y(),tavrh->vehicle_speed());
+	switch(conf_test_AXIS_ip){
+	case 15:
+		ih->daddr() = Address::instance().str2addr("1.0.15");break;
+	case 2:
+		ih->daddr() = Address::instance().str2addr("1.0.2");break;
+	default:
+		ih->daddr() = Address::instance().str2addr("2.0.2");break;
 	}
 
+	Scheduler::instance().schedule(target_, p, 0.0);
 
 
 }
@@ -211,39 +147,63 @@ TAVRagent::replyHello() {
 //	ih->daddr() = IP_BROADCAST;
 
 
-
 	ch->ptype() = PT_SIMUTAVR;
 	ch->size() = IP_HDR_LEN + tavrh->size();
 	ch->direction() = hdr_cmn::DOWN;
 	ch->iface() = -2;
 	ch->error() = 0;
 	ch->addr_type() = NS_AF_NONE;
-//	ch->next_hop() = (nsaddr_t)0;
+	ch->next_hop() = Address::instance().str2addr("0.0.2");
 	ch->prev_hop_ = vehicle_ip();          //
 
 
 	ih->saddr() = vehicle_ip();
-	ih->daddr() = IP_BROADCAST;
+	ih->daddr() =  Address::instance().str2addr("0.0.2");
 	ih->sport() = RT_PORT;
 	ih->dport() = RT_PORT;
-	ih->ttl_ = 10;
+	ih->ttl_ = 2;
 
 
 	tavrh->rwi_type_ = TAVRTYPE_WIRED;
 
-	int i = 0;
-	for(; i < VEHICULAR_AMOUNT ;i++){
+	int slen = strlen(Address::instance().print_nodeaddr(vehicle_ip()));
+	char currentIP[slen+1];
 
-		tavrh->vehicle_ip_LIST()[i] = vehicle_ip_LIST_[i];
-		tavrh->vehicle_position_x_LIST()[i] = vehicle_position_x_LIST_[i];
-		tavrh->vehicle_position_y_LIST()[i] = vehicle_position_y_LIST_[i];
-		tavrh->vehicle_speed_LIST()[i] = vehicle_speed_LIST_[i];
-		tavrh->vehicle_direction_LIST()[i] = vehicle_direction_LIST_[i];
+	currentIP[slen] = '\0';
+	strcpy(currentIP,Address::instance().print_nodeaddr(vehicle_ip()));
 
-		fprintf(stdout,"\n\tTAVRagent, %d replyHello ptType=%u sip=%d did=%d posx=%0.2f, posy=%0.2f",i,ch->ptype(),ih->saddr(), ih->daddr(),tavrh->vehicle_position_x_LIST()[i],tavrh->vehicle_position_y_LIST()[i]);
+	if(currentIP[0] == '1'){
+		fprintf(stdout,"\n\tTAVRagent, %d replyHello sip=%s did=%s posx=%0.2f, posy=%0.2f",
+				conf_node_id,
+				Address::instance().print_nodeaddr(vehicle_ip()),
+				Address::instance().print_nodeaddr(ih->daddr()),
+				vehicle_position_x(),
+				vehicle_position_y());
+
+
+		int i = 0;
+		for(; i < VEHICULAR_AMOUNT ;i++){
+
+			tavrh->vehicle_ip_LIST()[i] = vehicle_ip_LIST_[i];
+			tavrh->vehicle_position_x_LIST()[i] = vehicle_position_x_LIST_[i];
+			tavrh->vehicle_position_y_LIST()[i] = vehicle_position_y_LIST_[i];
+			tavrh->vehicle_speed_LIST()[i] = vehicle_speed_LIST_[i];
+			tavrh->vehicle_direction_LIST()[i] = vehicle_direction_LIST_[i];
+
+			if(tavrh->vehicle_speed_LIST()[i] > -1){
+						fprintf(stdout,"\n\t---- %d replyHello sip=%s did=%s posx=%0.2f, posy=%0.2f",
+								i,
+								Address::instance().print_nodeaddr(vehicle_ip()),
+								Address::instance().print_nodeaddr(tavrh->vehicle_ip_LIST()[i]),
+								tavrh->vehicle_position_x_LIST()[i],
+								tavrh->vehicle_position_y_LIST()[i]);
+						ch->next_hop() = tavrh->vehicle_ip_LIST()[i];
+						ih->daddr() =  tavrh->vehicle_ip_LIST()[i];
+					}
+	//		fprintf(stdout,"\n\tTAVRagent, %d replyHello ptType=%u sip=%d did=%d posx=%0.2f, posy=%0.2f",i,ch->ptype(),ih->saddr(), ih->daddr(),tavrh->vehicle_position_x_LIST()[i],tavrh->vehicle_position_y_LIST()[i]);
+		}
+
 	}
-
-
 
 
 
@@ -335,7 +295,7 @@ TAVRagent::recv(Packet *p, Handler *) {
 	struct hdr_ip			*ih = HDR_IP(p);
 //	struct hdr_veh_hello	*tavrh = HDR_VEH_HELLO(p);
 
-	if(conf_debug == 2)fprintf(stdout,"\n\tTAVRagent, recv msgType=%u  sid=%d did=%d cid=%d",ch->ptype(),ih->saddr(),ih->daddr(),vehicle_ip());
+//	fprintf(stdout,"\n\tTAVRagent, recv msgType=%u  sid=%d did=%d cid=%d",ch->ptype(),ih->saddr(),ih->daddr(),vehicle_ip());
 
 
 
@@ -376,9 +336,6 @@ void TAVRagent::recv_TAVR(Packet* p) {
 	struct hdr_ip		*ih = HDR_IP(p);
 	struct hdr_tavr 	*tavr = HDR_TAVR(p);
 
-	char* sip = new char[1];
-	char* cip = new char[1];
-	char* dip = new char[1];
 	int   slen = 0;
 	int   clen = 0;
 	int   dlen = 0;
@@ -386,12 +343,12 @@ void TAVRagent::recv_TAVR(Packet* p) {
 	slen = strlen(Address::instance().print_nodeaddr(ih->saddr()));
 	clen = strlen(Address::instance().print_nodeaddr(vehicle_ip()));
 	dlen = strlen(Address::instance().print_nodeaddr(ih->daddr()));
-	sip = new char[slen+1];
-	cip = new char[clen+1];
-	dip = new char[dlen+1];
-	sip[slen]='/0';
-	cip[clen]='/0';
-	dip[dlen]='/0';
+	char sip[slen+1];
+	char cip[clen+1];
+	char dip[dlen+1];
+	sip[slen]='\0';
+	cip[clen]='\0';
+	dip[dlen]='\0';
 	strcpy(sip,Address::instance().print_nodeaddr(ih->saddr()));
 	strcpy(cip,Address::instance().print_nodeaddr(vehicle_ip()));
 	strcpy(dip,Address::instance().print_nodeaddr(ih->daddr()));
@@ -415,6 +372,7 @@ void TAVRagent::recv_TAVR(Packet* p) {
 		fprintf(stdout,"\nsip=%s, cip=%s, dip=%s TAVRagent-----recv_tavr----",sip,cip,dip);
 		break;
 	}
+
 }
 
 
@@ -430,7 +388,8 @@ TAVRagent::recv_Hello(Packet *p) {
 */
 
 	int nodeid = get_indexFromaddr(helloh->vehicle_ip());
-
+	fprintf(stdout, "update node index=%d ip=%s",nodeid,Address::instance().print_nodeaddr(helloh->vehicle_ip()));
+	vehicle_ip_LIST_[nodeid] = helloh->vehicle_ip();
 	vehicle_position_x_LIST_[nodeid] = helloh->vehicle_position_x();
 	vehicle_position_y_LIST_[nodeid] = helloh->vehicle_position_y();
 	vehicle_speed_LIST_[nodeid] = helloh->vehicle_speed();
@@ -540,13 +499,14 @@ int TAVRagent::command(int argc, const char*const* argv) {
 		}else if (strcasecmp (argv[1], "msgINET") == 0) {
 			conf_test_INET = atoi(argv[2]);
 			return TCL_OK;
-		}else if (strcasecmp (argv[1], "confdebug") == 0) {
-			conf_debug = atoi(argv[2]);
-			return TCL_OK;
 		}else if (strcasecmp (argv[1], "nodeID") == 0) {
 			conf_node_id = atoi(argv[2]);
 			return TCL_OK;
+		}else if (strcasecmp (argv[1], "AXIS_ip") == 0) {
+			conf_test_AXIS_ip = atoi(argv[2]);
+			return TCL_OK;
 		}
+
 /*
 
 		else if (strcasecmp (argv[1], "confmapx") == 0) {
@@ -611,17 +571,44 @@ int TAVRagent::command(int argc, const char*const* argv) {
 
 void
 TAVRagent::print_addr(nsaddr_t addr){
-	int slen = strlen(Address::instance().print_nodeaddr(addr));
+	int slen = sizeof(GstrIP)/sizeof(GstrIP[0]);
+	for(int i = 0; i < slen; i++){
+		GstrIP[i] = '\0';
+	}
+	slen = strlen(Address::instance().print_nodeaddr(addr));
 
-	GstrIP[slen]='/0';
 	strcpy(GstrIP,Address::instance().print_nodeaddr(addr));
 }
 
 int
 TAVRagent::get_indexFromaddr(nsaddr_t addr){
 	print_addr(addr);
+	int ipSD[2]={-1,-1};
+	int ipDOTflag = 0;
+	int slen = sizeof(GstrIP)/sizeof(GstrIP[0]);
+	for(int i = 0; i < slen; i++){
+//		fprintf(stdout,"%d %c",i,GstrIP[i]);
+		if(GstrIP[i] == '.'){
+			if(ipDOTflag == 1){
+				ipSD[0] = i + 1;
 
-	return atoi(GstrIP);
+				ipDOTflag++;
+			}else if(ipDOTflag == 0){
+				ipDOTflag++;
+			}
+		}else if(ipSD[0] > -1 && GstrIP[i] == '\0'){
+			ipSD[1] = i - 1;
+
+			i = slen + 10;
+		}
+	}
+
+	char IPdata[ipSD[1] - ipSD[0] + 2];
+	IPdata[ipSD[1] - ipSD[0] + 1] = '\0';
+	for(int i = ipSD[0]; i < ipSD[1] + 1; i++){
+		IPdata[i - ipSD[0]] = GstrIP[i];
+	}
+	return atoi(IPdata);
 }
 //=====================test part======================
 
@@ -634,6 +621,6 @@ void
 TAVRagent::print_bs(){
 	print_addr(vehicle_ip());
 //	if(conf_debug != 0)printf("\n---** --- Cip=%u, BSip=%u is-a=%d",vehicle_ip(),node_->base_stn(),(vehicle_ip() == node_->base_stn()));
-	if(conf_debug != 0)printf("\n---** --- Cip=%s, BSip=%s is-a=%d",GstrIP,Address::instance().print_nodeaddr(node_->base_stn()),(vehicle_ip() == node_->base_stn()));
+//  printf("\n---** --- Cip=%s, BSip=%s is-a=%d",GstrIP,Address::instance().print_nodeaddr(node_->base_stn()),(vehicle_ip() == node_->base_stn()));
 }
 

@@ -15,6 +15,9 @@
 #include <mobilenode.h>
 #include <trace.h>
 #include <classifier.h>
+#include <string>
+
+using namespace std;
 
 
 
@@ -132,7 +135,7 @@ private:
 
 	int			conf_test_INET;//bits VALID: six bits, first FLAG, second BROADCAST, third SUBNET, last INTERNET
 
-	int         conf_debug;
+	int         conf_test_AXIS_ip;
 
 
 protected:
