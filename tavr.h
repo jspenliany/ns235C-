@@ -132,7 +132,13 @@ private:
 
 	int			conf_test_INET;//bits VALID: six bits, first FLAG, second BROADCAST, third SUBNET, last INTERNET
 
+
+
+//-------------test propose----------------------
 	int         conf_debug;
+	int			dgb_sendIP;
+	int			dgb_sendADDRtype;
+	int			dgb_randMAX;
 
 
 protected:
