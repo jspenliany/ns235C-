@@ -22,7 +22,7 @@
 #define		BASE_STATION_AMOUNT	20						//how many base sink nodes in the network
 
 #define		VEHICULAR_AMOUNT	100					//how many vehicular in the network
-#define		HELLO_INTERVAL		20						//interval for send out Hello msg( second)
+#define		HELLO_INTERVAL		2						//interval for send out Hello msg( second)
 #define		TAVR_MAX_HOPS		50						//hops that msg will tx
 
 
