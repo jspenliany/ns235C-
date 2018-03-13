@@ -15,6 +15,10 @@
 #include <mobilenode.h>
 #include <trace.h>
 #include <classifier.h>
+#include <string>
+#include <classifier-port.h>
+
+using namespace std;
 
 
 
@@ -23,7 +27,7 @@
 #define JITTER				(Random::uniform()*0.5)
 
 #define	VEHICULAR_INFO_PTB_TIMEOUT		10			//delay before send out msg to wired node for future broadcast (6 seconds)
-#define	VEHICULAR_INFO_PTB_RECV_COUNTER	8			//msgs must be received before send to wired node for future broadcast,
+#define	VEHICULAR_INFO_PTB_RECV_COUNTER	2			//msgs must be received before send to wired node for future broadcast,
 													//including the above, collaboratively decide when to send info to all vehicular
 
 #define TRAFFIC_ROW_AMOUNT				8
@@ -117,7 +121,7 @@ private:
 	//
 	MobileNode *node_;
 	Trace *logtarget_;
-	NsObject *port_dmux_;
+	PortClassifier *dmux_;
 
 
 	//otcl command methods for configuration parameter
@@ -132,7 +136,7 @@ private:
 
 	int			conf_test_INET;//bits VALID: six bits, first FLAG, second BROADCAST, third SUBNET, last INTERNET
 
-	int         conf_debug;
+	int         conf_test_AXIS_ip;
 
 
 protected:
@@ -226,6 +230,9 @@ public:
 protected:
 	void print_addr(nsaddr_t);
 	int  get_indexFromaddr(nsaddr_t);
+	int  get_domain(nsaddr_t);
+	int  get_ipID(nsaddr_t);
+	int  get_cluster(nsaddr_t);
 
 
 };
